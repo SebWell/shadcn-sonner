@@ -4,11 +4,11 @@
     :class="cn(
       'fixed z-[100] flex flex-col gap-2 p-4 pointer-events-none',
       positionClasses,
-      customClass
+      content.customClass
     )"
     :style="{ 
-      '--toast-width': width || '356px',
-      '--toast-gap': gap || '8px'
+      '--toast-width': content.width || '356px',
+      '--toast-gap': content.gap || '8px'
     }"
   >
     <TransitionGroup
@@ -38,7 +38,7 @@
       >
         <!-- Swipe indicator -->
         <div
-          v-if="enableSwipe && toast.swipeProgress > 0"
+          v-if="content.enableSwipe && toast.swipeProgress > 0"
           class="absolute inset-0 bg-destructive/10 rounded-lg transition-opacity"
           :style="{ opacity: toast.swipeProgress }"
         />
@@ -119,7 +119,7 @@
         
         <!-- Close button -->
         <button
-          v-if="showCloseButton && !toast.action && !toast.cancel"
+          v-if="content.showCloseButton && !toast.action && !toast.cancel"
           @click.stop="() => dismissToast(toast.id)"
           :class="cn(
             'flex-shrink-0 rounded-md p-1 text-muted-foreground hover:text-foreground',
@@ -134,7 +134,7 @@
         
         <!-- Progress bar -->
         <div
-          v-if="toast.duration && showProgress"
+          v-if="toast.duration && content.showProgress"
           class="absolute bottom-0 left-0 h-1 bg-primary/20 rounded-b-lg overflow-hidden"
           :style="{ width: '100%' }"
         >
@@ -157,14 +157,16 @@ import { cn } from './cn.js'
 export default {
   name: 'Sonner',
   props: {
-        // Individual props will be auto-generated based on the component type
-        // This is a placeholder that will be manually refined per component
-    },
+    content: {
+      type: Object,
+      default: () => ({})
+    }
+  },
   emits: ['toast-shown', 'toast-dismissed', 'action-clicked'],
   setup(props, { emit }) {
     const toasterRef = ref(null)
     const toasts = ref([])
-    const maxToasts = computed(() => props.maxToasts || 5)
+    const maxToasts = computed(() => props.content.maxToasts || 5)
     const pausedToasts = ref(new Set())
     const timers = ref(new Map())
     
@@ -174,7 +176,7 @@ export default {
     })
     
     const positionClasses = computed(() => {
-      const position = props.position || 'bottom-right'
+      const position = props.content.position || 'bottom-right'
       const positions = {
         'top-left': 'top-4 left-4',
         'top-center': 'top-4 left-1/2 -translate-x-1/2',
@@ -187,7 +189,7 @@ export default {
     })
     
     const transitionName = computed(() => {
-      const position = props.position || 'bottom-right'
+      const position = props.content.position || 'bottom-right'
       if (position.includes('top')) return 'toast-top'
       if (position.includes('bottom')) return 'toast-bottom'
       return 'toast-bottom'
@@ -250,7 +252,7 @@ export default {
       const index = visibleToasts.value.findIndex(t => t.id === toast.id)
       const offset = index * 60
       
-      if (props.position?.includes('bottom')) {
+      if (props.content.position?.includes('bottom')) {
         return `translateY(-${offset}px)`
       } else {
         return `translateY(${offset}px)`
@@ -323,7 +325,7 @@ export default {
     }
     
     const pauseToast = (id) => {
-      if (props.pauseOnHover !== false) {
+      if (props.content.pauseOnHover !== false) {
         pausedToasts.value.add(id)
       }
     }
@@ -366,7 +368,7 @@ export default {
     
     // Event handlers
     const handleToastClick = (toast) => {
-      if (props.dismissOnClick !== false) {
+      if (props.content.dismissOnClick !== false) {
         dismissToast(toast.id)
       }
     }
@@ -431,8 +433,8 @@ export default {
       exposeAPI()
       
       // Handle manual toasts from content
-      if (props.toasts) {
-        props.toasts.forEach(toastData => {
+      if (props.content.toasts) {
+        props.content.toasts.forEach(toastData => {
           createToast(toastData)
         })
       }
@@ -444,7 +446,7 @@ export default {
     })
     
     // Watch for new toasts from content
-    watch(() => props.toasts, (newToasts) => {
+    watch(() => props.content.toasts, (newToasts) => {
       if (newToasts && Array.isArray(newToasts)) {
         newToasts.forEach(toastData => {
           if (!toasts.value.find(t => t.id === toastData.id)) {
